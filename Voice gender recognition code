@@ -94,11 +94,22 @@ confusionMatrix(data = voice_test$pred_label2,
 # Assuming 'new_data' is your new input data
 # Assuming 'new_data' is your new input data
 # Assuming 'new_data' is your new input data
-yx <- read.csv("C:/Users/naray/OneDrive/Documents/tst.csv")
-new_data <- yx  # Assign the data to a new variable 'new_data'
+
+
+# Check if levels are NULL and set them based on unique values
+#if (is.null(levels(true_labels))) {
+#  levels(true_labels) <- unique(new_data$true_label)
+#}
+
+# Continue with your predictions and evaluation
+
+
+
+yz <- read.csv("C:\\Users\\naray\\OneDrive\\Documents\\testdatanew.csv")
+new_data <- yz # Assign the data to a new variable 'new_data'
 
 # Assuming the true labels are in a column named "true_label"
-true_labels <- as.factor(new_data$true_label)
+#true_labels <- as.factor(new_data$true_label)
 
 # Check if levels are NULL and set them based on unique values
 #if (is.null(levels(true_labels))) {
@@ -111,10 +122,10 @@ new_data$pred_label <- as.factor(ifelse(new_data$pred > 0.5, 1, 0))
 
 # Ensure both true_labels and pred_label have the same levels
 #levels(new_data$pred_label) <- levels(true_labels)
+ab<-new_data$pred_label
+if (any(new_data$pred_label == 1)) {
+  cat("male\n")
+} else {
+  cat("female\n")
+}
 
-# Use confusionMatrix from the caret package
-library(caret)
-conf_matrix <- confusionMatrix(data = new_data$pred_label, reference = true_labels, positive = "1")
-
-# Print confusion matrix
-print(conf_matrix)
