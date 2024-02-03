@@ -1,0 +1,120 @@
+voice <- read.csv("voice.csv")
+rmarkdown::paged_table(voice)
+
+
+str(voice)
+
+
+colSums(is.na(voice))
+voice$label <- ifelse(voice$label == "male",1,0)
+
+# plot feature correlation
+ggcorr(data = voice,label = T, label_size = 3, hjust =.9, layout.exp = 2)
+
+
+voice <- voice %>%
+  mutate(label = as.factor(label))
+a <- ggplot(data=voice, aes(x=meanfun, group=label, fill=label)) +
+  geom_density(adjust=1.5, alpha=.2) +
+  scale_fill_manual(values=c("red", "blue"))+
+  theme_get()
+b <- ggplot(data=voice, aes(x=sp.ent, group=label, fill=label)) +
+  geom_density(adjust=1.5, alpha=.2) +
+  scale_fill_manual(values=c("red", "blue"))+
+  theme_get()
+c <- ggplot(data=voice, aes(x=IQR, group=label, fill=label)) +
+  geom_density(adjust=1.5, alpha=.2) +
+  scale_fill_manual(values=c("red", "blue"))+
+  theme_get()
+d <- ggplot(data=voice, aes(x=Q25, group=label, fill=label)) +
+  geom_density(adjust=1.5, alpha=.2) +
+  scale_fill_manual(values=c("red", "blue"))+
+  theme_get()
+e <- ggplot(data=voice, aes(x=sd, group=label, fill=label)) +
+  geom_density(adjust=1.5, alpha=.2) +
+  scale_fill_manual(values=c("red", "blue"))+
+  theme_get()
+
+ggarrange(a,b,c,d,e, ncol = 2, nrow = 3)
+
+
+
+prop.table(table(voice$label))
+
+
+
+# Remove multicolinearity
+voice_clean <- voice %>% select(-c(dfrange,IQR,centroid))
+
+
+RNGkind(sample.kind = "default") 
+set.seed(123)  # Set a seed for reproducibility
+#index <- sample(x = nrow(voice_clean), size = round(nrow(voice_clean) * 0.8))
+
+
+
+index <- sample(x = nrow(voice_clean), size = round(nrow(voice_clean) * 0.8))
+
+
+
+
+
+
+# splitting, by doing subseting
+voice_train <- voice_clean[index,]
+voice_test <- voice_clean[-index,]
+
+
+model_voice <- glm(formula = label~.,data = voice_train,family = "binomial")
+summary(model_voice)
+
+voice_test$pred <- predict(object = model_voice,newdata = voice_test,type = "response")
+
+voice_test$pred_label <- ifelse(voice_test$pred > 0.5,1,0)
+voice_test$pred_label <- as.factor(voice_test$pred_label)
+
+
+confusionMatrix(data = voice_test$pred_label,
+                reference = voice_test$label,
+                positive = "1")
+
+
+model_step <- step(object = model_voice,direction = "backward", trace = 0)
+summary(model_step)
+
+voice_test$pred2 <- predict(object = model_step,newdata = voice_test,type = "response")
+voice_test$pred_label2 <- ifelse(voice_test$pred2 > 0.5,1,0)
+voice_test$pred_label2 <- as.factor(voice_test$pred_label2)
+
+
+confusionMatrix(data = voice_test$pred_label2,
+                reference = voice_test$label)
+
+
+# Assuming 'new_data' is your new input data
+# Assuming 'new_data' is your new input data
+# Assuming 'new_data' is your new input data
+yx <- read.csv("C:/Users/naray/OneDrive/Documents/tst.csv")
+new_data <- yx  # Assign the data to a new variable 'new_data'
+
+# Assuming the true labels are in a column named "true_label"
+true_labels <- as.factor(new_data$true_label)
+
+# Check if levels are NULL and set them based on unique values
+#if (is.null(levels(true_labels))) {
+#  levels(true_labels) <- unique(new_data$true_label)
+#}
+
+# Continue with your predictions and evaluation
+new_data$pred <- predict(object = model_step, newdata = new_data, type = "response")
+new_data$pred_label <- as.factor(ifelse(new_data$pred > 0.5, 1, 0))
+
+# Ensure both true_labels and pred_label have the same levels
+#levels(new_data$pred_label) <- levels(true_labels)
+
+# Use confusionMatrix from the caret package
+library(caret)
+conf_matrix <- confusionMatrix(data = new_data$pred_label, reference = true_labels, positive = "1")
+
+# Print confusion matrix
+print(conf_matrix)
